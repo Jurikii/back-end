@@ -1,0 +1,35 @@
+package com.juriki.api_juriki.processo.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDate;
+
+@Getter
+@Setter
+public class ProcessoCriarRequestDTO {
+
+    @NotBlank(message = "O título é obrigatório.")
+    @Size(max = 150, message = "O título deve ter no máximo 150 caracteres.")
+    private String titulo;
+
+    @NotBlank(message = "O número do processo é obrigatório.")
+    @Size(max = 50, message = "O número do processo deve ter no máximo 50 caracteres.")
+    private String numeroProcesso;
+
+    private String descricao;
+
+    @Size(max = 150, message = "O tribunal deve ter no máximo 150 caracteres.")
+    private String tribunal;
+
+    @Size(max = 150, message = "A vara deve ter no máximo 150 caracteres.")
+    private String vara;
+
+    @NotNull(message = "A data de abertura é obrigatória.")
+    private LocalDate dataAbertura;
+
+    private LocalDate dataEncerramento;
+}
