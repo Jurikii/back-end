@@ -4,7 +4,8 @@ import com.juriki.api_juriki.arquivo.dto.ArquivoResponseDTO;
 import com.juriki.api_juriki.arquivo.dto.ArquivoUploadRequestDTO;
 import com.juriki.api_juriki.arquivo.enums.TipoArquivo;
 import com.juriki.api_juriki.arquivo.service.ArquivoService;
-import jakarta.validation.Valid;
+import com.juriki.api_juriki.auth.security.UsuarioDetails;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/arquivos")
@@ -24,14 +26,26 @@ import java.util.Map;
 public class ArquivoController {
 
     private final ArquivoService arquivoService;
+    private final Validator validator;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('CLIENTE', 'ADVOGADO')")
     public ResponseEntity<ArquivoResponseDTO> upload(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestPart("arquivo") MultipartFile file,
-            @RequestPart("dados") @Valid ArquivoUploadRequestDTO dto
-    ) {
+            @RequestParam("dados") String dadosJson
+    ) throws Exception {
+        var objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        ArquivoUploadRequestDTO dto = objectMapper.readValue(dadosJson, ArquivoUploadRequestDTO.class);
+
+        var violacoes = validator.validate(dto);
+        if (!violacoes.isEmpty()) {
+            String erros = violacoes.stream()
+                    .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                    .collect(Collectors.joining(", "));
+            throw new IllegalArgumentException(erros);
+        }
+
         Integer idUsuario = extrairId(userDetails);
         ArquivoResponseDTO response = arquivoService.upload(idUsuario, file, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -105,6 +119,6 @@ public class ArquivoController {
     }
 
     private Integer extrairId(UserDetails userDetails) {
-        return Integer.parseInt(userDetails.getUsername());
+        return ((UsuarioDetails) userDetails).getId();
     }
 }
