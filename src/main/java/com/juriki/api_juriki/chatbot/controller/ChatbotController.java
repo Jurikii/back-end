@@ -1,5 +1,6 @@
 package com.juriki.api_juriki.chatbot.controller;
 
+import com.juriki.api_juriki.auth.security.UsuarioDetails;
 import com.juriki.api_juriki.chatbot.dto.*;
 import com.juriki.api_juriki.chatbot.service.ChatbotService;
 import jakarta.validation.Valid;
@@ -87,6 +88,6 @@ public class ChatbotController {
     }
 
     private Integer extrairId(UserDetails userDetails) {
-        return Integer.parseInt(userDetails.getUsername());
+        return ((UsuarioDetails) userDetails).getId();
     }
 }
